@@ -280,7 +280,7 @@ class WriteDrExtended(WriteDr):
             tm.add_title(f" Sampling rate: \t\t {t.pop()} Hz")
 
         if cnt > 0:
-            tm.add_title(" Average bitrate: \t\t %d kbs " %
+            tm.add_title(" Average bitrate: \t\t %d kbps " %
                          ((sum_kbs / 1000) / cnt))
 
         t = set(list_bit)
