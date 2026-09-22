@@ -188,7 +188,7 @@ class WriteDrExtended(WriteDr):
         album_t = drm.meta_data.get_album_title()
         artist = drm.meta_data.get_album_artist()[0]
 
-        if not isinstance(tm, table.TextTable):
+        if not isinstance(tm, (table.TextTable, table.ExtendedTextTable)):
             self.set_loudness_war_db_compatible(False)
 
         if self.get_loudness_war_db_compatible():
@@ -248,7 +248,7 @@ class WriteDrExtended(WriteDr):
                     if nr is None:
                         nr = i + 1
 
-                    row.append(f"{nr:02d} - {tr_title} \t [{codec}]")
+                    row.append(f"{nr:02d} - {tr_title} [{codec}]")
 
                 # bitrate = drm.meta_data.get_value(curr_file_name, 'bitrate')
                 bit = drm.meta_data.get_value(curr_file_name, 'bit')
@@ -280,33 +280,38 @@ class WriteDrExtended(WriteDr):
 
         tm.append_empty_line()
 
+        def info_line(label, value):
+            # fixed-width space padding instead of literal tabs: tab-stop
+            # width depends on the viewer, so tabs after labels of different
+            # lengths don't actually line up the values
+            return f" {(label + ':'):<18s}{value}"
+
         t = set(sampl_rate)
         if len(t) > 1:
-            tm.add_title(f" Samplerate: \t\t\t various - {sorted(t)} Hz")
+            tm.add_title(info_line("Samplerate", f"various - {sorted(t)} Hz"))
         else:
-            tm.add_title(f" Samplerate: \t\t\t {t.pop()} Hz")
+            tm.add_title(info_line("Samplerate", f"{t.pop()} Hz"))
 
         tc = set(channels_list)
         if len(tc) == 1:
-            tm.add_title(f" Channels: \t\t\t {tc.pop()}")
+            tm.add_title(info_line("Channels", tc.pop()))
         elif len(tc) > 1:
-            tm.add_title(f" Channels: \t\t\t various - {sorted(tc)}")
+            tm.add_title(info_line("Channels", f"various - {sorted(tc)}"))
 
         t = set(list_bit)
         if len(t) > 1:
-            tm.add_title(f" Bits per sample: \t\t various - {sorted(t)} bit")
+            tm.add_title(info_line("Bits per sample", f"various - {sorted(t)} bit"))
         else:
-            tm.add_title(f" Bits per sample: \t\t {t.pop()} bit")
+            tm.add_title(info_line("Bits per sample", f"{t.pop()} bit"))
 
         if cnt > 0:
-            tm.add_title(" Average bitrate: \t\t %d kbps " %
-                         ((sum_kbs / 1000) / cnt))
+            tm.add_title(info_line("Average bitrate", "%d kbps" % ((sum_kbs / 1000) / cnt)))
 
         tcod = set(codec_list)
         if len(tcod) == 1:
-            tm.add_title(f" Codec: \t\t\t {tcod.pop()}")
+            tm.add_title(info_line("Codec", tcod.pop()))
         elif len(tcod) > 1:
-            tm.add_title(f" Codec: \t\t\t various - {sorted(tcod)}")
+            tm.add_title(info_line("Codec", f"various - {sorted(tcod)}"))
 
         tm.append_empty_line()
         tm.add_title(dr14.get_name_version())

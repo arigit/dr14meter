@@ -27,7 +27,7 @@ import time
 
 from dr14meter import dr14_config as config
 from dr14meter.dynamic_range_meter import DynamicRangeMeter #,
-from dr14meter.table import TextTable, BBcodeTable, HtmlTable, MediaWikiTable
+from dr14meter.table import ExtendedTextTable, BBcodeTable, HtmlTable, MediaWikiTable
 from dr14meter.out_messages import print_msg
 
 
@@ -129,7 +129,7 @@ def write_results(dr, options, out_dir, cur_dir):
         print_msg("--------------------------------------------------------------- ")
 
     if options.print_std_out:
-        dr.fwrite_dr("", TextTable(), table_format, std_out=True)
+        dr.fwrite_dr("", ExtendedTextTable(), table_format, std_out=True)
 
     if options.turn_off_out:
         return
@@ -140,7 +140,7 @@ def write_results(dr, options, out_dir, cur_dir):
 
     tables_list = {
         'b': ["dr14_bbcode.txt", BBcodeTable()],
-        't': ["dr14-DR"+str(dr.dr14)+".txt",TextTable()],
+        't': ["dr14-DR"+str(dr.dr14)+".txt",ExtendedTextTable()],
         'h': ["dr14.html", HtmlTable()],
         'w': ["dr14_mediawiki.txt", MediaWikiTable()]
     }

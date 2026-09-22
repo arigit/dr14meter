@@ -479,7 +479,12 @@ class ExtendedTextTable (Table):
                 if len(c) > self._cols_sz[i]:
                     self._cols_sz[i] = len(c)
         elif r.is_title:
-            d = self._eval_row_len() - len(r.row[0])
+            # grow columns only if the title is wider than the row as it
+            # stands; the old (row_len - title_len) > 0 check padded on every
+            # title that already fit, and since row_len grows from that
+            # padding, each later title call compounded on the inflated
+            # width -- runaway growth after just a few titles.
+            d = len(r.row[0]) - self._eval_row_len()
             if d > 0:
                 c = 0
                 while d > 0:
