@@ -118,7 +118,8 @@ def write_results(dr, options, out_dir, cur_dir):
 
     full_out_dir = os.path.join(cur_dir) if out_dir is None else out_dir
 
-    print_msg("DR = " + str(dr.dr14))
+    print_msg("")
+    print_msg(f"Official DR value:  DR{int(dr.dr14)}")
 
     if not (os.access(full_out_dir, os.W_OK)):
         full_out_dir = tempfile.gettempdir()
