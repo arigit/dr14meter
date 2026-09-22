@@ -217,6 +217,8 @@ class WriteDrExtended(WriteDr):
 
         list_bit = []
         sampl_rate = []
+        channels_list = []
+        codec_list = []
 
         sum_kbs = 0
         cnt = 0
@@ -236,12 +238,12 @@ class WriteDrExtended(WriteDr):
                 curr_file_name = element['file_name']
 
                 tr_title = drm.meta_data.get_value(curr_file_name, 'title')
+                codec = drm.meta_data.get_value(curr_file_name, 'codec')
                 #print( "> " + tr_title )
                 if tr_title is None:
                     row.append(element['file_name'])
                 else:
                     nr = drm.meta_data.get_value(curr_file_name, 'track_nr')
-                    codec = drm.meta_data.get_value(curr_file_name, 'codec')
 
                     if nr is None:
                         nr = i + 1
@@ -251,6 +253,7 @@ class WriteDrExtended(WriteDr):
                 # bitrate = drm.meta_data.get_value(curr_file_name, 'bitrate')
                 bit = drm.meta_data.get_value(curr_file_name, 'bit')
                 s_rate = drm.meta_data.get_value(curr_file_name, 'sampling_rate')
+                n_channels = drm.meta_data.get_value(curr_file_name, 'channels_nr')
 
                 kbs = drm.meta_data.get_value(curr_file_name, 'bitrate')
 
@@ -260,6 +263,10 @@ class WriteDrExtended(WriteDr):
 
                 list_bit.append(bit)
                 sampl_rate.append(s_rate)
+                if n_channels is not None:
+                    channels_list.append(n_channels)
+                if codec is not None:
+                    codec_list.append(codec)
 
                 tm.append_row(row)
 
@@ -275,19 +282,31 @@ class WriteDrExtended(WriteDr):
 
         t = set(sampl_rate)
         if len(t) > 1:
-            tm.add_title(f" Sampling rate: \t\t various - {sorted(t)} Hz")
+            tm.add_title(f" Samplerate: \t\t\t various - {sorted(t)} Hz")
         else:
-            tm.add_title(f" Sampling rate: \t\t {t.pop()} Hz")
+            tm.add_title(f" Samplerate: \t\t\t {t.pop()} Hz")
 
-        if cnt > 0:
-            tm.add_title(" Average bitrate: \t\t %d kbps " %
-                         ((sum_kbs / 1000) / cnt))
+        tc = set(channels_list)
+        if len(tc) == 1:
+            tm.add_title(f" Channels: \t\t\t {tc.pop()}")
+        elif len(tc) > 1:
+            tm.add_title(f" Channels: \t\t\t various - {sorted(tc)}")
 
         t = set(list_bit)
         if len(t) > 1:
             tm.add_title(f" Bits per sample: \t\t various - {sorted(t)} bit")
         else:
             tm.add_title(f" Bits per sample: \t\t {t.pop()} bit")
+
+        if cnt > 0:
+            tm.add_title(" Average bitrate: \t\t %d kbps " %
+                         ((sum_kbs / 1000) / cnt))
+
+        tcod = set(codec_list)
+        if len(tcod) == 1:
+            tm.add_title(f" Codec: \t\t\t {tcod.pop()}")
+        elif len(tcod) > 1:
+            tm.add_title(f" Codec: \t\t\t various - {sorted(tcod)}")
 
         tm.append_empty_line()
         tm.add_title(dr14.get_name_version())

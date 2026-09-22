@@ -117,6 +117,7 @@ class RetrieveMetadata:
             ('size', r"^size=\s*(\d+)\s*$", str),
             ('bitrate', r"^bit_rate=\s*(\d+)\s*$", str),
             ('duration', r"^duration=\s*(\d+\.\d+)\s*$", float),
+            ('channels_nr', r"^\s*channels\s*=\s*(\d+)\s*$", int),
         ]
 
         for t, p, f in simple_tags:
@@ -318,6 +319,7 @@ class RetrieveMetadata:
                 'codec': base_track.get('codec'),
                 'sampling_rate': base_track.get('sampling_rate'),
                 'channel': base_track.get('channel'),
+                'channels_nr': base_track.get('channels_nr'),
                 'bit': base_track.get('bit'),
                 'bitrate': base_track.get('bitrate'),
                 'duration': track_duration,
