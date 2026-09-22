@@ -20,15 +20,30 @@
 import pathlib
 import time
 import sys
-import tempfile
 import subprocess
 import wave
 import numpy
 import shutil
+import functools
 
 
 from dr14meter.out_messages import print_msg, dr14_log_info
 from dr14meter.dr14_global import get_ffmpeg_cmd
+
+
+@functools.lru_cache(maxsize=32)
+def _probe_channels(file_name):
+    """Number of audio channels in file_name, via ffprobe. Cached because a
+    cue-sheet split probes the same underlying file once per track."""
+    try:
+        out = subprocess.run(
+            ['ffprobe', '-v', 'error', '-select_streams', 'a:0',
+             '-show_entries', 'stream=channels', '-of', 'csv=p=0', str(file_name)],
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, check=True,
+        )
+        return int(out.stdout.decode().strip())
+    except (subprocess.CalledProcessError, ValueError, FileNotFoundError):
+        return 2
 
 #from _ftdi1 import NONE
 
@@ -59,7 +74,7 @@ class AudioFileReader:
     def get_cmd(self):
         return self.__ffmpeg_cmd
 
-    def get_cmd_options(self, file_name, tmp_file, start=None, end=None):
+    def get_cmd_options(self, file_name, start=None, end=None):
         opts = ['-y']
 
         # -ss/-to as *input* options (before -i) seek/trim the source file itself,
@@ -72,8 +87,10 @@ class AudioFileReader:
         opts += [
             '-i',
             file_name,
-            *'-b:a 16 -ar 44100'.split(),
-            tmp_file,
+            '-ar', '44100',
+            '-acodec', 'pcm_s16le',
+            '-f', 's16le',
+            'pipe:1',
             '-loglevel', 'quiet',
         ]
         return opts
@@ -83,20 +100,41 @@ class AudioFileReader:
 
         time_a = time.time_ns()
 
-        full_command = self.__cmd
+        # headerless raw PCM over a pipe: no temp file ever touches disk, and
+        # unlike a WAV container it needs no length header ffmpeg would be
+        # unable to backpatch on a non-seekable pipe output
+        channels = _probe_channels(file_name)
+        full_command = [self.__cmd] + self.get_cmd_options(file_name, start, end)
 
-        file = file_name.name
-        tmp_dir = tempfile.gettempdir()
-        tmp_file = pathlib.Path(tmp_dir, file + f"-{time_a}.wav")
-        full_command = [full_command] + self.get_cmd_options(file_name, tmp_file, start, end)
-        subprocess.check_call(full_command, shell=False)
-        ret_f = self.read_wav(tmp_file, target)
-        tmp_file.unlink(missing_ok=True)
+        proc = subprocess.run(full_command, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                              shell=False, check=True)
+        ret_f = self._decode_pcm_s16le(proc.stdout, channels, 44100, target)
 
         time_a = time.time_ns() - time_a
         dr14_log_info(f"AudioFileReader.read_audio_file_new: Clock: {time_a / 1000_000_000:2.8f}")
 
         return ret_f
+
+    def _decode_pcm_s16le(self, data, channels, framerate, target):
+        sampwidth = 2
+
+        try:
+            nframes = len(data) // (channels * sampwidth)
+            usable = nframes * channels * sampwidth
+
+            target.channels = channels
+            target.Fs = framerate
+            target.sample_width = sampwidth
+
+            Y = numpy.frombuffer(data[:usable], dtype='int16').reshape(nframes, channels)
+            target.Y = Y / numpy.float32(2 ** 15 + 1)
+        except:
+            self.__init__()
+            print_msg(f"Unexpected error: {sys.exc_info()}")
+            print_msg("\n - ERROR ! ")
+            return False
+
+        return True
 
     def read_wav(self, file_name, target, start=None, end=None):
         file_name = pathlib.Path(file_name)
@@ -157,6 +195,6 @@ class WavFileReader(AudioFileReader):
     def get_cmd(self):
         return ""
 
-    def get_cmd_options(self, file_name, tmp_file, start=None, end=None):
+    def get_cmd_options(self, file_name, start=None, end=None):
         return ""
 
