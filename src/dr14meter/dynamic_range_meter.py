@@ -138,7 +138,8 @@ class DynamicRangeMeter:
         """Split a single audio file into tracks according to a cue sheet and
         compute the DR of each track, instead of scanning one file per track."""
 
-        if not test_ffmpeg():
+        # .wav is read directly (wave module); everything else needs ffmpeg to decode/split
+        if audio_path.suffix.lower() != '.wav' and not test_ffmpeg():
             sys.exit(1)
 
         self.dr14 = 0
