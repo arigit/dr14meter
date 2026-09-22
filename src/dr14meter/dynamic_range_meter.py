@@ -28,7 +28,7 @@ from dr14meter.write_dr import WriteDr, WriteDrExtended
 from dr14meter.audio_math import sha1_track_v1
 from dr14meter.cue_sheet import CueSheet, CueParseError
 from dr14meter.dr14_config import get_collection_dir
-from dr14meter.dr14_global import min_dr
+from dr14meter.dr14_global import min_dr, test_ffmpeg
 from dr14meter.out_messages import print_msg, print_out, flush_msg
 
 
@@ -137,6 +137,9 @@ class DynamicRangeMeter:
     def scan_cue(self, dir_name, cue_path: pathlib.Path, audio_path: pathlib.Path, thread_cnt=None):
         """Split a single audio file into tracks according to a cue sheet and
         compute the DR of each track, instead of scanning one file per track."""
+
+        if not test_ffmpeg():
+            sys.exit(1)
 
         self.dr14 = 0
         self.dir_name = str(dir_name)

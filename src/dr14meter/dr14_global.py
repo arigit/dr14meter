@@ -49,6 +49,13 @@ def get_name_version():
     return f'dr14meter {dr14_version()}'
 
 
+def test_ffmpeg():
+    if shutil.which('ffmpeg'):
+        return True
+    print_msg('ffmpeg not found in PATH: cue sheet splitting requires ffmpeg to be installed')
+    return False
+
+
 def get_ffmpeg_cmd():
 
     global ffmpeg_cmd
