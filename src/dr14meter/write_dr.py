@@ -139,17 +139,17 @@ class WriteDr:
         tm.new_tbody()
 
         tm.append_separator_line()
-        tm.append_row([" DR", "Peak", "RMS", "Duration", "File name"], 'h')
+        tm.append_row(["DR", "Peak", "RMS", "Duration", "File name"], 'h')
         tm.append_separator_line()
 
         for element in drm.res_list:
             if element['dr14'] > dr14.min_dr():
                 row = []
-                row.append(f" DR{element['dr14']}")
-                row.append(f" {element['dB_peak']:.2f} dB")
-                row.append(f" {element['dB_rms']:.2f} dB")
-                row.append(f" {element['duration']}")
-                row.append(f" {element['file_name']}")
+                row.append(f"DR{element['dr14']}")
+                row.append(f"{element['dB_peak']:.2f} dB")
+                row.append(f"{element['dB_rms']:.2f} dB")
+                row.append(f"{element['duration']}")
+                row.append(f"{element['file_name']}")
                 tm.append_row(row)
 
         tm.end_tbody()
@@ -227,9 +227,9 @@ class WriteDrExtended(WriteDr):
 
             if element['dr14'] > dr14.min_dr():
                 row = [
-                    f" DR{element['dr14']}",
-                    f" {element['dB_peak']:.2f} dB",
-                    f" {element['dB_rms']:.2f} dB",
+                    f"DR{element['dr14']}",
+                    f"{element['dB_peak']:.2f} dB",
+                    f"{element['dB_rms']:.2f} dB",
                     element['duration'],
                 ]
 
